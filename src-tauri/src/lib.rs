@@ -1,13 +1,30 @@
-use std::{thread::sleep, time::Duration};
-use tauri::{AppHandle, Emitter};
+use std::time::Duration;
+use tauri::{AppHandle, Emitter, Listener};
+use tokio::time::sleep;
+
+use std::sync::atomic::{AtomicBool, Ordering};
 
 #[tauri::command]
 fn start_process(app: AppHandle) {
     tauri::async_runtime::spawn(async move {
+        static IS_PAUSED: AtomicBool = AtomicBool::new(false);
+
+        app.listen("pause", |_| {
+            IS_PAUSED.store(true, Ordering::Relaxed);
+        });
+
+        app.listen("resume", |_| {
+            IS_PAUSED.store(false, Ordering::Relaxed);
+        });
+
         for i in 0..=100 {
+            while IS_PAUSED.load(Ordering::Relaxed) {
+                sleep(Duration::from_millis(10)).await;
+            }
+
             app.emit("progress", i).ok();
 
-            sleep(Duration::from_millis(50));
+            sleep(Duration::from_millis(50)).await;
         }
     });
 }
