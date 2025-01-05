@@ -1,22 +1,26 @@
 import { invoke } from "@tauri-apps/api/core";
-
-let greetInputEl: HTMLInputElement | null;
-let greetMsgEl: HTMLElement | null;
-
-async function greet() {
-  if (greetMsgEl && greetInputEl) {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    greetMsgEl.textContent = await invoke("greet", {
-      name: greetInputEl.value,
-    });
-  }
-}
+import { listen } from "@tauri-apps/api/event";
 
 window.addEventListener("DOMContentLoaded", () => {
-  greetInputEl = document.querySelector("#greet-input");
-  greetMsgEl = document.querySelector("#greet-msg");
-  document.querySelector("#greet-form")?.addEventListener("submit", (e) => {
-    e.preventDefault();
-    greet();
-  });
+    let headerEl = document.querySelector("#progress-header");
+    let progressEl = document.querySelector("#progress");
+    let buttonEl: HTMLButtonElement|null = document.querySelector("#start");
+
+    if (headerEl && progressEl && buttonEl) {
+        buttonEl.addEventListener("click", async () => {
+            await invoke("start_process");
+
+            headerEl.innerHTML = "Processing...";
+            buttonEl.disabled = true;
+        });
+
+        listen("progress", (event) => {
+            progressEl.innerHTML = `${event.payload}%`;
+
+            if (event.payload === 100) {
+                headerEl.innerHTML = "Done!";
+                buttonEl.disabled = false;
+            }
+        });
+    }
 });
