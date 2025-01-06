@@ -16,6 +16,13 @@
         "title": "events",
         "width": 800,
         "height": 600
+      },
+      {
+        "title": "window 2",
+        "label": "window_2",
+        "url": "window2.html",
+        "width": 600,
+        "height": 1000
       }
     ],
     "security": {
